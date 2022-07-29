@@ -47,7 +47,7 @@ class PostgresConfiguration(BaseSettings):
     port: str = Field(env="POSTGRES_PORT")
     username: str = Field(env="POSTGRES_USERNAME")
     password: str = Field(env="POSTGRES_PASSWORD")
-    db: str = Field(env="POSTGRES_LB_DB")
+    db: str = Field(env="POSTGRES_DB")
 
 
 class Settings(BaseSettings):
