@@ -46,6 +46,11 @@ steps:
       ENVIRONMENT: TEST
       JWT_SECRET_KEY:
         from_secret: JWT_SECRET_KEY
+      # Application
+      APPLICATION_NAME: "app"
+      APPLICATION_ENVIRONMENT: "TEST"
+      APPLICATION_LOG_LEVEL: "DEBUG"
+
     commands:
       - pip install --upgrade pip poetry cookiecutter
       - chmod +x test.sh
