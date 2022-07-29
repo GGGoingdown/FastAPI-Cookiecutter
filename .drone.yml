@@ -1,0 +1,160 @@
+kind: pipeline
+type: docker
+name: main
+
+workspace:
+  path: /app
+
+environment:
+  JWT_ALGORITHM: "HS256"
+  JWT_EXPIRE_TIME: 120
+
+  POSTGRES_HOST: "db"
+  POSTGRES_USERNAME: postgres
+  POSTGRES_PASSWORD: postgres
+  POSTGRES_PORT: 5432
+  POSTGRES_DB: test
+
+  REDIS_HOST: "cache"
+  REDIS_PORT: 6379
+  REDIS_EXPOSE: 6379
+  REDIS_USERNAME: default
+  REDIS_PASSWORD: redis_username
+  REDIS_BACKEND_DB: 0
+
+  BROADCASTER_HOST: broadcaster
+  BROADCASTER_PORT: 6379
+  BROADCASTER_EXPOSE: 6380
+
+
+  RABBITMQ_HOST: "broker"
+  RABBITMQ_PORT: 5672
+  RABBITMQ_EXPOSE: 5672
+  RABBITMQ_MANAGEMENT_EXPOSE: 15672
+  RABBITMQ_USERNAME: rabbitmq_user
+  RABBITMQ_PASSWORD: rabbitmq_user
+
+steps:
+  - name: waiton cache
+    image: akhenakh/drone-waiton:1.0
+    settings:
+      globaltimeout: 30s
+      urls:
+      - tcp://cache:6379
+
+  - name: waiton broadcaster
+    image: akhenakh/drone-waiton:1.0
+    settings:
+      globaltimeout: 30s
+      urls:
+      - tcp://broadcaster:6379
+
+
+  - name: waiton broker
+    image: akhenakh/drone-waiton:1.0
+    settings:
+      globaltimeout: 60s
+      urls:
+      - tcp://broker:5672
+
+  - name: waiton db
+    image: akhenakh/drone-waiton:1.0
+    settings:
+      globaltimeout: 60s
+      urls:
+      - tcp://db:5432
+
+  #TODO: Maybe it can do better
+  #FIXME: If worker install poetry file with application simultaneously, it may cause error.
+  # So application will install poetry after worker build well.
+  - name: waiton worker 120s
+    image: tiangolo/uvicorn-gunicorn-fastapi:python3.8
+    commands:
+    - sleep 120
+
+
+  - name: application testing
+    image: python:3.9-slim
+    environment:
+      PYTHONDONTWRITEBYTECODE: 1
+      PYTHONUNBUFFERED: 1
+      ENVIRONMENT: TEST
+      JWT_SECRET_KEY:
+        from_secret: JWT_SECRET_KEY
+    commands:
+      - pip install --upgrade pip poetry
+      - poetry install
+      - chmod +x test.sh
+      - bash test.sh
+
+
+  - name: telegram bot notification
+    image: appleboy/drone-telegram
+    when:
+      status:
+        - failure
+        - success
+    settings:
+      token:
+        from_secret: Telegram_gggoingdown_bot_token
+      to:
+        from_secret: Telegram_chat_id
+      message: >
+        {{#success build.status}}
+          Repository: {{repo.name}}
+          Test succeeded. Good job.
+        {{else}}
+          Repository: {{repo.name}}
+          Test failed. Fix me please.
+        {{/success}}
+
+services:
+- name: broker
+  image: rabbitmq:3.8-management
+  environment:
+    RABBITMQ_DEFAULT_USER: rabbitmq_user
+    RABBITMQ_DEFAULT_PASS: rabbitmq_user
+
+- name: cache
+  image: redis:6.2
+  detach: true
+  commands:
+    - redis-server --requirepass redis_username
+
+- name: broadcaster
+  image: redis:6.2
+  detach: true
+
+
+- name: db
+  image: postgres:13
+  environment:
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: postgres
+    POSTGRES_DB: test
+
+- name: worker
+  image: tiangolo/uvicorn-gunicorn-fastapi:python3.8
+  environment:
+    PYTHONDONTWRITEBYTECODE: 1
+    PYTHONUNBUFFERED: 1
+    PYTHONPATH: "${PYTHONPATH}:/app/Testing-Project"
+    ENVIRONMENT: TEST
+    JWT_SECRET_KEY:
+      from_secret: JWT_SECRET_KEY
+  commands:
+  - curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | POETRY_HOME=/opt/poetry python
+  - cd /usr/local/bin
+  - ln -s /opt/poetry/bin/poetry
+  - poetry config virtualenvs.create false
+  - cd /app
+  - poetry install
+  - chmod +x test_worker_service.sh
+  - bash test_worker_service.sh
+
+
+trigger:
+  branch:
+    - master
+    - test/*
+    - feature/*

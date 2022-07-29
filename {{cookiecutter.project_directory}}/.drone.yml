@@ -1,0 +1,144 @@
+kind: pipeline
+type: docker
+name: main
+
+workspace:
+  path: /app
+
+environment:
+  JWT_ALGORITHM: "HS256"
+  JWT_EXPIRE_TIME_MINUTE: 120
+
+  POSTGRES_HOST: "db"
+  POSTGRES_USERNAME: postgres
+  POSTGRES_PASSWORD: postgres
+  POSTGRES_PORT: 5432
+  POSTGRES_LB_DB: test
+
+  REDIS_HOST: "cache"
+  REDIS_PORT: 6379
+  REDIS_EXPOSE: 6379
+  REDIS_USERNAME: default
+  REDIS_PASSWORD: redis_username
+  REDIS_BACKEND_DB: 0
+
+  # Application
+  APPLICATION_NAME: "live_broadcast_testing"
+  APPLICATION_ENVIRONMENT: "TEST"
+  APPLICATION_LOG_LEVEL: "DEBUG"
+
+steps:
+  - name: waiton cache
+    image: gggoingdown/drone-waiton:v1.0.0
+    settings:
+      globaltimeout: 60
+      url: tcp://cache:6379
+
+  - name: waiton db
+    image: gggoingdown/drone-waiton:v1.0.0
+    settings:
+      globaltimeout: 60
+      url: tcp://db:5432
+
+  - name: application testing
+    image: python:3.9-slim
+    environment:
+      PYTHONDONTWRITEBYTECODE: 1
+      PYTHONUNBUFFERED: 1
+      ENVIRONMENT: TEST
+      JWT_SECRET_KEY:
+        from_secret: JWT_SECRET_KEY
+    commands:
+      - pip install --upgrade pip poetry
+      - poetry export -f requirements.txt --output requirements.txt --without-hashes --dev
+      - pip install --no-cache-dir --upgrade -r requirements.txt
+      - chmod +x ./script/service_entrypoint.sh
+      - bash ./script/service_entrypoint.sh pytest
+
+  - name: telegram bot notification
+    image: appleboy/drone-telegram
+    when:
+      status:
+        - failure
+        - success
+    settings:
+      token:
+        from_secret: Telegram_gggoingdown_CI_bot_token
+      to:
+        from_secret: Telegram_chat_id
+      message: >
+        {{#success build.status}}
+          Repository: {{repo.name}}
+          Test succeeded. Good job.
+        {{else}}
+          Repository: {{repo.name}}
+          Test failed. Fix me please.
+        {{/success}}
+
+services:
+  - name: cache
+    image: redis:6.2
+    detach: true
+    commands:
+      - redis-server --requirepass redis_username
+
+  - name: db
+    image: postgres:13
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: test
+
+trigger:
+  branch:
+    - master
+    - test/*
+    - feature/*
+
+---
+kind: pipeline
+type: docker
+name: build
+
+steps:
+  - name: docker
+    image: plugins/docker
+    settings:
+      username:
+        from_secret: DockerHub_username
+      password:
+        from_secret: DockerHub_password
+      repo: gggoingdown/fastapi-cookiecutter
+      build_args: ENVIRONMENT=PROD
+      tags:
+        - latest
+        - ${DRONE_TAG}
+      storage_driver: vfs
+
+  - name: send telegram notification
+    image: appleboy/drone-telegram
+    when:
+      status:
+        - success
+        - failure
+    settings:
+      token:
+        from_secret: Telegram_gggoingdown_CI_bot_token
+      to:
+        from_secret: Telegram_chat_id
+      message: >
+        {{#success build.status}}
+          Repository: {{repo.name}}
+          Version: {{build.number}}
+          Commit message:  {{commit.message}}
+          Message: build image succeeded. Good job.
+        {{else}}
+          Repository: {{repo.name}}
+          Version: {{build.number}}
+          Commit message:  {{commit.message}}
+          Message: build image failed. Fix me please.
+        {{/success}}
+
+trigger:
+  event:
+    - tag
