@@ -32,6 +32,19 @@ def add_sentry_middleware(app: FastAPI, *, release_name: str) -> None:
     app.add_middleware(CustomSentryAsgiMiddleware)
 
 
+# Log request
+def add_log_middleware(app: FastAPI) -> None:
+    from app.middleware import LogRequestsMiddleware, IgnoredRoute
+
+    app.add_middleware(
+        LogRequestsMiddleware,
+        ignored_routes=[
+            # IgnoredRoute(path="/health"),  # Health check endpoint
+            IgnoredRoute(path="/openapi.json"),  # OpenAPI
+        ],
+    )
+
+
 # Exceptions
 def add_exceptions(app: FastAPI) -> None:
     @app.exception_handler(exceptions.BaseInternalServiceException)
@@ -73,18 +86,21 @@ def create_app() -> FastAPI:
     @app.on_event("startup")
     async def startup_event():
         logger.info("--- Startup Event ---")
-        #! If resource with async function, change init_resources to await
+        #! If resource containe async function, change init_resources to await
         app.container.service.init_resources()
 
     @app.on_event("shutdown")
     async def shutdown_event():
         logger.info("--- Shutdown Event ---")
-        #! If resource with async function, change init_resources to await
+        #! If resource containe async function, change init_resources to await
         app.container.service.shutdown_resources()
 
     # Sentry middleware
     if settings.sentry.dns:
         add_sentry_middleware(app, release_name=settings.app.application_name)
+
+    # Log request middleware
+    add_log_middleware(app)
 
     # Customize Exceptions
     add_exceptions(app)

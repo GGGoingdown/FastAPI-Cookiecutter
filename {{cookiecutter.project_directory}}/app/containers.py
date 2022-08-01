@@ -14,7 +14,11 @@ class Service(containers.DeclarativeContainer):
     gateway = providers.DependenciesContainer()
 
     logger_init = providers.Resource(
-        services.LoggerInitialize, application_name=config.app.application_name
+        services.LoggerInitialize,
+        application_name=config.app.application_name,
+        log_level=config.app.log_level,
+        env_mode=config.app.env_mode,
+        log_path=config.app.log_path,
     )
 
 

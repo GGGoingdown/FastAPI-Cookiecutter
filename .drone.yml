@@ -13,6 +13,7 @@ environment:
   APPLICATION_NAME: "application_testing"
   APPLICATION_ENVIRONMENT: "TEST"
   APPLICATION_LOG_LEVEL: "DEBUG"
+  APPLICATION_LOG_PATH: "/var/log/application"
 
 steps:
   - name: application testing

@@ -14,6 +14,7 @@ class Application(BaseSettings):
     log_level: GenericSchema.LogLevel = Field(
         env="APPLICATION_LOG_LEVEL", default=GenericSchema.LogLevel.DEUBG
     )
+    log_path: str = Field(env="APPLICATION_LOG_PATH", default="/var/log/application")
 
 
 # JWT

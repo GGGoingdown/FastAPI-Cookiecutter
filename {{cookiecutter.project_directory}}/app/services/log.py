@@ -1,11 +1,14 @@
 import sys
+import logging
+import ecs_logging
 from loguru import logger
 from dependency_injector import resources
 from typing import Optional
 from pathlib import Path
 
 # Settings
-from app.schemas import GenericSchema
+from app import utils
+from app.schemas import GenericSchema, LogSchema
 
 
 class LoggerInitialize(resources.Resource):
@@ -29,8 +32,44 @@ class LoggerInitialize(resources.Resource):
         )
 
         if log_path:
-            ...
-            # TODO: Save file path
+            _path = Path(log_path) / application_name
+            if not _path.is_dir():
+                logger.info(f"Create log folder: {_path}")
+                _path.mkdir(parents=True, exist_ok=False)
+
+            uniquie_id = utils.get_shortuuid()
+            now = utils.get_utc_now()
+            dt_format = now.strftime("%Y-%m-%d")
+            log_file = _path / f"system-{dt_format}-{uniquie_id}.json"
+            logger.info(f"Create log file: {log_file}")
+            ecs_handler = logging.FileHandler(str(log_file))
+            ecs_handler.setFormatter(
+                ecs_logging.StdlibFormatter(
+                    exclude_fields=[
+                        "process",
+                        "level.icon",
+                        "log.origin",
+                        "log.original",
+                        "log.logger",
+                    ]
+                )
+            )
+
+            if env_mode != GenericSchema.EnvironmentMode.TEST:
+                logger.add(
+                    ecs_handler,
+                    format="[{extra[env_mode]}][{extra[provider]}] - [{extra[method]}] - {extra[path]} - [{extra[response_status_code]}] - {extra[response_body]}",
+                    filter="app.middleware",
+                    level="INFO",
+                    enqueue=True,
+                )
+                logger.configure(
+                    extra=LogSchema.EcsInitializeLogSchema(
+                        provider=application_name, env_mode=env_mode
+                    ).dict()
+                )
+
+            return log_file
 
         return None
 

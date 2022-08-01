@@ -6,6 +6,7 @@ services:
       context: .
     volumes:
       - .:/app/
+      - ./log/application:${APPLICATION_LOG_PATH:-/var/log/application}
     restart: unless-stopped
     ports:
       - ${APPLICATION_EXPOSE:-8000}:8000
