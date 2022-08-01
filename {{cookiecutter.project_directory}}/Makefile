@@ -19,9 +19,22 @@ build_no_cache:
 	echo "Build images no cache"
 	docker-compose --env-file ./env/.dev.env  build --build-arg ENVIRONMENT=DEV --no-cache
 
-doc:
+create_doc:
 	echo "Create documents"
 	docker-compose --env-file ./env/.test.env  up -d
-	docker-compose exec -it app python doc_generator --remove-old True
+	docker exec -it app python doc_generator.py --remove-old True
 	widdershins docs/api-docs-*.json -o README.md --language_tabs 'python:Python'
 	docker-compose --env-file ./env/.dev.env  down
+	sudo chmod -R 777 docs/
+
+create_env:
+	echo "Create development environment"
+	cp ./env/.cookiecutter.env ./env/.dev.env
+	sed -i 's/ENVIRONMENT="DEV"/ENVIRONMENT="DEV"/g' ./env/.dev.env
+	echo "Create testing environment"
+	cp ./env/.cookiecutter.env ./env/.test.env
+	sed -i 's/ENVIRONMENT="DEV"/ENVIRONMENT="TEST"/g' ./env/.test.env
+
+	chmod -R +x ./env
+	echo "Remove cookiecutter.env"
+	rm -f ./env/.cookiecutter.env

@@ -73,12 +73,14 @@ def create_app() -> FastAPI:
     @app.on_event("startup")
     async def startup_event():
         logger.info("--- Startup Event ---")
-        await app.container.service.init_resources()
+        #! If resource with async function, change init_resources to await
+        app.container.service.init_resources()
 
     @app.on_event("shutdown")
     async def shutdown_event():
         logger.info("--- Shutdown Event ---")
-        await app.container.service.shutdown_resources()
+        #! If resource with async function, change init_resources to await
+        app.container.service.shutdown_resources()
 
     # Sentry middleware
     if settings.sentry.dns:

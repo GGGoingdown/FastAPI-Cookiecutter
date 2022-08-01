@@ -56,7 +56,7 @@ if __name__ == "__main__":
 
     version = __VERSION__.replace(".", "")
     file_name = "-".join(__TITLE__.lower().split(" "))
-    html_title = "-".join(__TITLE__.capitalize().split(" "))
+    html_title = __TITLE__.capitalize()
     full_file_name = f"api-docs-{file_name}_v{version}"
     with open(f"./docs/{full_file_name}.html", "w") as fd:
         print(HTML_TEMPLATE % (html_title, json.dumps(app.openapi())), file=fd)

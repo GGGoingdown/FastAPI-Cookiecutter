@@ -10,7 +10,7 @@ environment:
   JWT_EXPIRE_TIME_MINUTE: 120
 
   # Application
-  APPLICATION_NAME: "live_broadcast_testing"
+  APPLICATION_NAME: "application_testing"
   APPLICATION_ENVIRONMENT: "TEST"
   APPLICATION_LOG_LEVEL: "DEBUG"
 
