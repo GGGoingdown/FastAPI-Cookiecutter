@@ -12,7 +12,6 @@ import sentry_sdk
 from loguru import logger
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
-from tortoise.exceptions import DoesNotExist, IntegrityError
 
 # Settings
 from app import exceptions
@@ -35,19 +34,6 @@ def add_sentry_middleware(app: FastAPI, *, release_name: str) -> None:
 
 # Exceptions
 def add_exceptions(app: FastAPI) -> None:
-    @app.exception_handler(DoesNotExist)
-    async def doesnotexist_exception_handler(request: Request, exc: DoesNotExist):
-        return JSONResponse(status_code=404, content={"detail": str(exc)})
-
-    @app.exception_handler(IntegrityError)
-    async def integrityerror_exception_handler(request: Request, exc: IntegrityError):
-        return JSONResponse(
-            status_code=422,
-            content={
-                "detail": [{"loc": [], "msg": str(exc), "type": "IntegrityError"}]
-            },
-        )
-
     @app.exception_handler(exceptions.BaseInternalServiceException)
     async def internalerror_exception_handler(
         request: Request, exc: exceptions.BaseInternalServiceException
