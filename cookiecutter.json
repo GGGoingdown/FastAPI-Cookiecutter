@@ -11,6 +11,9 @@
     "jwt_expire_minute": 60,
     "sentry_dns": "",
     "sentry_sample_rate": 1.0,
+    "admin": "eddie",
+    "admin_email": "eddiepai0401@gmail.com",
+    "admin_password": "",
     "_copy_without_render": [
         "*.html",
         ".drone.yml"
