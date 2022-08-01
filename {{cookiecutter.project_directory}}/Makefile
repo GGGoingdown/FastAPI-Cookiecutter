@@ -2,11 +2,13 @@
 up:
 	echo "Service up"
 	docker-compose --env-file ./env/.dev.env  up -d
+	docker-compose --env-file ./env/.dev.env logs app
 down:
 	echo "Service down"
 	docker-compose --env-file ./env/.dev.env  down
 test:
 	echo "Service testing"
+	docker-compose --env-file ./env/.test.env  build --build-arg ENVIRONMENT=TEST
 	docker-compose --env-file ./env/.test.env  up -d
 	docker exec -it app pytest
 	docker-compose --env-file ./env/.test.env  down

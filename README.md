@@ -1,3 +1,3 @@
 ### FastAPI Cookiecutter
 ## Branch
-- fastapi_base
+- fastapi/base
