@@ -8,9 +8,6 @@ services:
     volumes:
       - .:/app/
     restart: unless-stopped
-    depends_on:
-      - ${POSTGRES_HOST?Variable not set}
-      - ${REDIS_HOST?Variable not set}
     ports:
       - ${APPLICATION_EXPOSE:-8000}:8000
     expose:
@@ -28,28 +25,3 @@ services:
         "--port=8000",
         "--reload"
       ]
-
-  db:
-    image: postgres:13
-    container_name: postgre
-    restart: unless-stopped
-    environment:
-      - POSTGRES_USER=${POSTGRES_USERNAME?Variable not set}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD?Variable not set}
-      - POSTGRES_DB=${POSTGRES_DB:-test}
-      - PGDATA=/var/lib/postgresql/data/pgdata
-    ports:
-      - ${POSTGRES_EXPOSE:-5432}:5432
-    expose:
-      - ${POSTGRES_EXPOSE:-5432}
-
-  cache:
-    image: redis:6.2
-    container_name: redis
-    ports:
-      - ${REDIS_EXPOSE:-6379}:6379
-    expose:
-      - ${REDIS_EXPOSE:-6379}
-    restart: unless-stopped
-    command: >
-      --requirepass ${REDIS_PASSWORD:-redis_user}

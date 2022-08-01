@@ -1,9 +1,9 @@
 #######
 #   Application Metadata
 #######
-__VERSION__ = "v0.0.1"
-__TITLE__ = "FastAPI Application"
-__DESCRIPTION__ = "FastAPI Base Application"
+__VERSION__ = "{{cookiecutter.project_version}}"
+__TITLE__ = "{{cookiecutter.project_title}}"
+__DESCRIPTION__ = "{{cookiecutter.project_description}}"
 __DOCS_URL__ = None
 __ROOT_PATH__ = "/api/v1"
 ################################################

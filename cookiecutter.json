@@ -1,8 +1,13 @@
 {
     "project_name": "Base Project",
+    "project_description": "",
+    "project_version": "0.0.1",
+    "project_title": "{{ cookiecutter.project_name|capfirst|replace(' ', '') }}",
     "project_slug": "{{ cookiecutter.project_name|lower|replace(' ', '-') }}",
-    "project_directory": "{{ cookiecutter.project_name|replace(' ', '-') }}",
-    "application_expose": "8000",
+    "project_directory": "{{ cookiecutter.project_name|capfirst|replace(' ', '-') }}",
+    "jwt_algorithm": "HS256",
+    "jwt_secret_key": "",
+    "jwt_expire_minute": 60,
     "sentry_dns": "",
     "sentry_sample_rate": 1.0,
     "_copy_without_render": [

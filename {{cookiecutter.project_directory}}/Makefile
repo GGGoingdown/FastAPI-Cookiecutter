@@ -18,3 +18,10 @@ build:
 build_no_cache:
 	echo "Build images no cache"
 	docker-compose --env-file ./env/.dev.env  build --build-arg ENVIRONMENT=DEV --no-cache
+
+doc:
+	echo "Create documents"
+	docker-compose --env-file ./env/.test.env  up -d
+	docker-compose exec -it app python doc_generator --remove-old True
+	widdershins docs/api-docs-*.json -o README.md --language_tabs 'python:Python'
+	docker-compose --env-file ./env/.dev.env  down

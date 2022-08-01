@@ -10,12 +10,7 @@ fastapi = "^0.79.0"
 uvicorn = "^0.18.2"
 dependency-injector = "^4.39.1"
 sentry-sdk = "^1.9.0"
-tortoise-orm = "0.19.0"
 loguru = "^0.6.0"
-aerich = "^0.6.3"
-aioredis = "^2.0.1"
-tenacity = "^8.0.1"
-asyncpg = "0.25.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "7.1.1"
