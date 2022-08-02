@@ -20,7 +20,8 @@ environment:
   POSTGRES_USERNAME: postgres
   POSTGRES_PASSWORD: postgres
   POSTGRES_PORT: 5432
-  POSTGRES_LB_DB: test
+  POSTGRES_DB: test
+
   # Cache
   REDIS_HOST: "cache"
   REDIS_PORT: 6379
