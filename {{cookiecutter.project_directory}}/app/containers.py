@@ -53,6 +53,9 @@ class Service(containers.DeclarativeContainer):
         auth_selector=authencation_seletor,
     )
 
+    # * User Service *#
+    user_service = providers.Singleton(services.UserService, user_repo=user_repo)
+
 
 class Application(containers.DeclarativeContainer):
     config = providers.Configuration()

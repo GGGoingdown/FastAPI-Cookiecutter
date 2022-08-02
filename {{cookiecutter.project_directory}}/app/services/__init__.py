@@ -5,3 +5,4 @@ from .auth import (  # noqa: F401
     AuthenticationSelector,
     JWTHandler,
 )
+from .user import UserService  # noqa: F401

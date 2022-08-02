@@ -35,15 +35,20 @@ steps:
       PYTHONDONTWRITEBYTECODE: 1
       PYTHONUNBUFFERED: 1
       ENVIRONMENT: TEST
+      MIGRATION: true
+      CREATE_INIT_DATA: false
     commands:
       - export $(grep -v '^#' ./env/.drone.env | xargs)
       - pip install --upgrade pip
       - pip install --no-cache-dir --upgrade -r /project/requirements.txt
-      - chmod +x ./script/service_entrypoint.sh
-      - bash ./script/service_entrypoint.sh pytest -p no:warnings
+      - aerich upgrade
+      - python ./tests/create_test_init_data.py
+      - pytest
+
     volumes:
       - name: pythonpath
         path: /project
+
 
   - name: notification
     image: appleboy/drone-telegram

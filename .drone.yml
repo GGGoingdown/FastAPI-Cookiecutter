@@ -14,23 +14,22 @@ environment:
   JWT_SECRET_KEY: "3f9b6bac9a7bf08feb5f37bf255ad8102d11a20b0deb2d5e14ced7f5c34afbfb"
   JWT_ALGORITHM: "HS256"
   JWT_EXPIRE_TIME: 120
+
   # Application
   APPLICATION_NAME: "application_testing"
   APPLICATION_ENVIRONMENT: "TEST"
   APPLICATION_LOG_LEVEL: "DEBUG"
   APPLICATION_LOG_PATH: "/var/log/application"
 
-
   # DB
   POSTGRES_HOST: "db"
   POSTGRES_USERNAME: postgres
   POSTGRES_PASSWORD: postgres
   POSTGRES_PORT: 5432
-  POSTGRES_LB_DB: test
+  POSTGRES_DB: test
+
   # Cache
   REDIS_HOST: "cache"
-  REDIS_PORT: 6379
-  REDIS_EXPOSE: 6379
   REDIS_USERNAME: default
   REDIS_PASSWORD: redis_username
   REDIS_BACKEND_DB: 0
@@ -76,11 +75,15 @@ steps:
     image: python:3.9-slim
     environment:
       ENVIRONMENT: TEST
+      MIGRATION: true
+      CREATE_INIT_DATA: false
     commands:
       - cd /project/testing-project
       - pip install --no-cache-dir --upgrade -r /project/requirements.txt
-      - chmod +x ./script/service_entrypoint.sh
-      - bash ./script/service_entrypoint.sh pytest
+      - aerich upgrade
+      - python ./tests/create_test_init_data.py
+      - pytest
+
     volumes:
       - name: pythonpath
         path: /project

@@ -1,6 +1,9 @@
 import sys
 import os
 from pathlib import Path
+from loguru import logger
+from tortoise import run_async
+
 
 FILE = Path(__file__).resolve()
 ROOT = FILE.parents[1]  # app folder
@@ -8,36 +11,10 @@ if str(ROOT) not in sys.path:
     sys.path.append(str(ROOT))  # add ROOT to PATH
 
 
-import traceback  # noqa: E402
-from tortoise import Tortoise, run_async  # noqa: E402
-from tenacity import retry, stop_after_attempt, wait_fixed  # noqa: E402
-from loguru import logger  # noqa: E402
-
 ###
 from app import models  # noqa: E402
-from app.containers import Application  # noqa: E402
 from app.schemas import UserSchema  # noqa: E402
-
-
-max_tries = 60 * 5  # 5 minutes
-wait_seconds = 1
-
-
-@retry(stop=stop_after_attempt(max_tries), wait=wait_fixed(wait_seconds))
-async def db_connected():
-    try:
-        conn = Tortoise.get_connection("default")
-        logger.info(f"Ping -> {await conn.execute_query('SELECT 1')}")
-
-    except ConnectionRefusedError as e:
-        error_message = traceback.format_exc()
-        logger.error(error_message)
-        raise e
-
-    except Exception as e:
-        error_message = traceback.format_exc()
-        logger.error(error_message)
-        raise e
+from app.services.auth import BaseAuthService  # noqa: E402
 
 
 def get_admin_info() -> UserSchema.CreateUser:
@@ -55,7 +32,11 @@ async def create_user(user_payload: UserSchema.CreateUser):
         logger.info("--- Already create user ---")
     else:
         logger.info("--- Create user ---")
-        user_model = models.User(**user_payload.dict())
+        password_hash = BaseAuthService.get_password_hash(user_payload.password)
+        user_model = models.User(
+            password_hash=password_hash,
+            **user_payload.dict(exclude={"password", "verify_password"}),
+        )
         await user_model.save()
 
         await models.User.get(id=user_model.id)
@@ -64,9 +45,13 @@ async def create_user(user_payload: UserSchema.CreateUser):
 
 async def main():
     try:
+        from app.containers import Application
+        from pre_start.check_connection import db_connected
+
         container = Application()
         logger.info("--- Connect DB ---")
         await container.gateway.db_resource.init()
+        logger.info("--- Check DB connection---")
         await db_connected()
         logger.info("--- Get admin information ---")
         admin_info = get_admin_info()
