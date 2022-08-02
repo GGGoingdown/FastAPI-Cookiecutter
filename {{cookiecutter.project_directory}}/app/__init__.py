@@ -91,7 +91,7 @@ def create_app() -> FastAPI:
         description=__DESCRIPTION__,
         version=__VERSION__,
         docs_url=__DOCS_URL__,
-        root_path=__ROOT_PATH__,
+        # root_path=__ROOT_PATH__,
     )
 
     # Routers
