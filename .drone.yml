@@ -21,7 +21,6 @@ environment:
   APPLICATION_LOG_LEVEL: "DEBUG"
   APPLICATION_LOG_PATH: "/var/log/application"
 
-
   # DB
   POSTGRES_HOST: "db"
   POSTGRES_USERNAME: postgres
@@ -29,11 +28,8 @@ environment:
   POSTGRES_PORT: 5432
   POSTGRES_DB: test
 
-
   # Cache
   REDIS_HOST: "cache"
-  REDIS_PORT: 6379
-  REDIS_EXPOSE: 6379
   REDIS_USERNAME: default
   REDIS_PASSWORD: redis_username
   REDIS_BACKEND_DB: 0
