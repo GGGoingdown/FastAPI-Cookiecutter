@@ -30,8 +30,6 @@ environment:
 
   # Cache
   REDIS_HOST: "cache"
-  REDIS_PORT: 6379
-  REDIS_EXPOSE: 6379
   REDIS_USERNAME: default
   REDIS_PASSWORD: redis_username
   REDIS_BACKEND_DB: 0
