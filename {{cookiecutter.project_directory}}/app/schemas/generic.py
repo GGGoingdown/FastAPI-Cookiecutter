@@ -1,4 +1,5 @@
 from enum import Enum
+from pydantic import BaseModel
 
 
 class LogLevel(str, Enum):
@@ -17,3 +18,7 @@ class EnvironmentMode(str, Enum):
     TEST = "TEST"
     STAG = "STAG"
     PROD = "PROD"
+
+
+class DetailResponse(BaseModel):
+    detail: str

@@ -15,7 +15,9 @@ services:
     env_file:
       - ./env/.dev.env
     environment:
-      - MIGRATION=true
+      - MIGRATION=${MIGRATION?Variable not set}
+      - CREATE_INIT_DATA=${CREATE_INIT_DATA?Variable not set}
+      - APPLICATION_ENVIRONMENT=${APPLICATION_ENVIRONMENT?Variable not set}
     command:
       [
         "./script/service_entrypoint.sh",

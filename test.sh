@@ -20,6 +20,9 @@ poetry export -f requirements.txt --output requirements.txt --without-hashes --d
 
 pip install --no-cache-dir --upgrade -r requirements.txt
 
-chmod +x ./script/service_entrypoint.sh
-
-bash ./script/service_entrypoint.sh pytest
+# DB Migration
+aerich upgrade
+# Create test init data
+python ./tests/create_test_init_data.py
+# Pytest
+pytest

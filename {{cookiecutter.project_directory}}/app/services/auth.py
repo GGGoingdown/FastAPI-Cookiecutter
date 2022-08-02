@@ -107,7 +107,7 @@ class AuthenticationService(BaseAuthService):
 
     def authenticate_jwt(
         self, security_scopes: SecurityScopes, token: str
-    ) -> AuthSchema.JWTDecodeData:
+    ) -> AuthSchema.JWTUser:
         # Decode JWT
         payload = self._auth_selector.jwt.decode(token)
         # Get User ID
@@ -139,7 +139,7 @@ class AuthenticationService(BaseAuthService):
                     headers={"WWW-Authenticate": authenticate_value},
                 )
 
-        return AuthSchema.JWTDecodeData.construct(**jwt_schema)
+        return AuthSchema.JWTUser.construct(**jwt_schema)
 
 
 class AuthorizationService(BaseAuthService):
@@ -151,7 +151,7 @@ class AuthorizationService(BaseAuthService):
     ) -> None:
         self._auth_selector = auth_selector
 
-    def create_jwt_token(self, *, user_id: int, scopes: Iterable[str]) -> str:
+    def create_jwt_token(self, *, user_id: int, scopes: Iterable[str] = []) -> str:
         payload = AuthSchema.JWTPayload(sub=user_id, scopes=scopes).dict()
         expried_dt = self._auth_selector.jwt.create_expired_time()
         payload.update({"exp": expried_dt})

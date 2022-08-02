@@ -12,5 +12,10 @@ class JWTTokenData(BaseModel):
     scopes: List[str] = Field(..., description="User Policy")
 
 
-class JWTDecodeData(JWTTokenData):
+class JWTUser(JWTTokenData):
     ...
+
+
+class LoginResponse(BaseModel):
+    access_token: str
+    token_type: str = Field(default="bearer")

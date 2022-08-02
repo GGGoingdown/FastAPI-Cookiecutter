@@ -21,6 +21,14 @@ from app.config import settings
 def add_sentry_middleware(app: FastAPI, *, release_name: str) -> None:
     from app.middleware import CustomSentryAsgiMiddleware
 
+    def before_send(event, hint):
+        if "exc_info" in hint:
+            exc_type, exc_value, tb = hint["exc_info"]
+            if isinstance(exc_value, ValueError):
+                logger.warning(f"Exception: {exc_type} - Value: {exc_value}")
+                return None
+        return event
+
     # Initial sentry and add middleware
     logger.info("--- Initial Sentry ---")
     sentry_sdk.init(
@@ -28,6 +36,7 @@ def add_sentry_middleware(app: FastAPI, *, release_name: str) -> None:
         traces_sample_rate=settings.sentry.trace_sample_rates,
         release=f"{release_name}@{__VERSION__}",
         environment=settings.app.env_mode.value,
+        before_send=before_send,
     )
     app.add_middleware(CustomSentryAsgiMiddleware)
 
@@ -39,7 +48,7 @@ def add_log_middleware(app: FastAPI) -> None:
     app.add_middleware(
         LogRequestsMiddleware,
         ignored_routes=[
-            # IgnoredRoute(path="/health"),  # Health check endpoint
+            IgnoredRoute(path="/health"),  # Health check endpoint
             IgnoredRoute(path="/openapi.json"),  # OpenAPI
         ],
     )
@@ -47,6 +56,21 @@ def add_log_middleware(app: FastAPI) -> None:
 
 # Exceptions
 def add_exceptions(app: FastAPI) -> None:
+    from tortoise.exceptions import DoesNotExist, IntegrityError
+
+    @app.exception_handler(DoesNotExist)
+    async def doesnotexist_exception_handler(request: Request, exc: DoesNotExist):
+        return JSONResponse(status_code=404, content={"detail": str(exc)})
+
+    @app.exception_handler(IntegrityError)
+    async def integrityerror_exception_handler(request: Request, exc: IntegrityError):
+        return JSONResponse(
+            status_code=422,
+            content={
+                "detail": [{"loc": [], "msg": str(exc), "type": "IntegrityError"}]
+            },
+        )
+
     @app.exception_handler(exceptions.BaseInternalServiceException)
     async def internalerror_exception_handler(
         request: Request, exc: exceptions.BaseInternalServiceException
@@ -65,21 +89,23 @@ def create_app() -> FastAPI:
         description=__DESCRIPTION__,
         version=__VERSION__,
         docs_url=__DOCS_URL__,
-        root_path=__ROOT_PATH__,
+        # root_path=__ROOT_PATH__,
     )
 
     # Routers
     from app import routers
 
     app.include_router(routers.health_router)
+    app.include_router(routers.authentication_router)
+    app.include_router(routers.user_router)
 
     # Dependency injection
+    from app import security
     from app.containers import Application
 
     container = Application()
     container.config.from_pydantic(settings)
-
-    container.wire(modules=[sys.modules[__name__]])
+    container.wire(modules=[sys.modules[__name__], security, routers.auth])
 
     app.container = container
 

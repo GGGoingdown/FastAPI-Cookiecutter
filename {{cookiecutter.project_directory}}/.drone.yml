@@ -45,21 +45,23 @@ steps:
       urls:
         - tcp://db:5432
 
-
   - name: application testing
     image: python:3.9-slim
     environment:
       PYTHONDONTWRITEBYTECODE: 1
       PYTHONUNBUFFERED: 1
       ENVIRONMENT: TEST
+      MIGRATION: true
+      CREATE_INIT_DATA: false
       JWT_SECRET_KEY:
         from_secret: JWT_SECRET_KEY
     commands:
       - pip install --upgrade pip poetry
       - poetry export -f requirements.txt --output requirements.txt --without-hashes --dev
       - pip install --no-cache-dir --upgrade -r requirements.txt
-      - chmod +x ./script/service_entrypoint.sh
-      - bash ./script/service_entrypoint.sh pytest -p no:warnings
+      - aerich upgrade
+      - python ./tests/create_test_init_data.py
+      - pytest
 
   - name: telegram bot notification
     image: appleboy/drone-telegram
