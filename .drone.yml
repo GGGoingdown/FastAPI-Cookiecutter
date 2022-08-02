@@ -39,7 +39,7 @@ steps:
         - success
     settings:
       token:
-        from_secret: Telegram_gggoingdown_bot_token
+        from_secret: Telegram_gggoingdown_CI_bot_token
       to:
         from_secret: Telegram_chat_id
       message: >
