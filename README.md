@@ -6,7 +6,6 @@
     - PostgreSQL
     - Redis
 
-
 ---
 ### Usage
 ```
