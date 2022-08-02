@@ -41,6 +41,7 @@ create_env:
 	echo "Create testing environment"
 	cp ./env/.cookiecutter.env ./env/.test.env
 	sed -i 's/ENVIRONMENT="DEV"/ENVIRONMENT="TEST"/g' ./env/.test.env
+	sed -i 's/CREATE_INIT_DATA=true/CREATE_INIT_DATA=false/g' ./env/.test.env
 
 	chmod -R +x ./env
 	echo "Remove cookiecutter.env"
