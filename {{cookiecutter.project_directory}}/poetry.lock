@@ -530,6 +530,24 @@ optional = false
 python-versions = "*"
 
 [[package]]
+name = "requests"
+version = "2.28.1"
+description = "Python HTTP for Humans."
+category = "dev"
+optional = false
+python-versions = ">=3.7, <4"
+
+[package.dependencies]
+certifi = ">=2017.4.17"
+charset-normalizer = ">=2,<3"
+idna = ">=2.5,<4"
+urllib3 = ">=1.21.1,<1.27"
+
+[package.extras]
+socks = ["PySocks (>=1.5.6,!=1.5.7)"]
+use_chardet_on_py3 = ["chardet (>=3.0.2,<6)"]
+
+[[package]]
 name = "rfc3986"
 version = "1.5.0"
 description = "Validating URI References per RFC 3986"
@@ -723,7 +741,7 @@ dev = ["pytest (>=4.6.2)", "black (>=19.3b0)"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "37ed7a98ee4cc3f17e5fd040ef2a8a43ef8f69ce5366e009955f330abe7db336"
+content-hash = "e9714b5ba44cbb5316fae37243bf987af96354de714aeae34473201bca7d390e"
 
 [metadata.files]
 aerich = [
@@ -939,6 +957,7 @@ pytz = [
     {file = "pytz-2022.1-py2.py3-none-any.whl", hash = "sha256:e68985985296d9a66a881eb3193b0906246245294a881e7c8afe623866ac6a5c"},
     {file = "pytz-2022.1.tar.gz", hash = "sha256:1e760e2fe6a8163bc0b3d9a19c4f84342afa0a2affebfaa84b01b978a02ecaa7"},
 ]
+requests = []
 rfc3986 = [
     {file = "rfc3986-1.5.0-py2.py3-none-any.whl", hash = "sha256:a86d6e1f5b1dc238b218b012df0aa79409667bb209e58da56d0b94704e712a97"},
     {file = "rfc3986-1.5.0.tar.gz", hash = "sha256:270aaf10d87d0d4e095063c65bf3ddbc6ee3d0b226328ce21e036f946e421835"},

@@ -16,8 +16,15 @@ WORKDIR /app
 COPY --from=requirements-stage /tmp/requirements.txt /code/requirements.txt
 
 RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
+# Application src
 COPY ./app /app/app
-COPY ./script /app/script/
+# Application pre-start
+COPY ./pre_start /app/pre_start
+
+# DB Migration
+COPY ./migrations /app/migrations
+# Script
+COPY ./script /app/script
 
 RUN chmod +x /app/script/service_entrypoint.sh
 

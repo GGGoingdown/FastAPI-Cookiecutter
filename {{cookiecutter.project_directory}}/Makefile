@@ -5,13 +5,18 @@ up:
 	docker-compose --env-file ./env/.dev.env logs -f app
 down:
 	echo "Service down"
-	docker-compose --env-file ./env/.dev.env  down
+	docker-compose --env-file ./env/.dev.env down -v
 test:
 	echo "Service testing"
 	docker-compose --env-file ./env/.test.env  build --build-arg ENVIRONMENT=TEST
 	docker-compose --env-file ./env/.test.env  up -d
+	# Check connection and crate test init data
+	docker exec -it app python ./pre_start/check_connection.py
+	docker exec -it app python ./tests/create_test_init_data.py
+	# Execute pytest
 	docker exec -it app pytest
-	docker-compose --env-file ./env/.test.env  down
+	# Service down
+	docker-compose --env-file ./env/.test.env  down -v
 
 build:
 	echo "Build images"
@@ -26,7 +31,7 @@ create_doc:
 	docker-compose --env-file ./env/.test.env  up -d
 	docker exec -it app python doc_generator.py --remove-old True
 	widdershins docs/api-docs-*.json -o README.md --language_tabs 'python:Python'
-	docker-compose --env-file ./env/.dev.env  down
+	docker-compose --env-file ./env/.dev.env  down -v
 	sudo chmod -R 777 docs/
 
 create_env:

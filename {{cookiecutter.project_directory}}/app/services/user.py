@@ -1,5 +1,3 @@
-from typing import Optional
-
 ###
 from app.models import User
 from app.repositories import UserRepo
@@ -11,6 +9,10 @@ class UserService:
     def __init__(self, user_repo: UserRepo) -> None:
         self._user_repo = user_repo
 
-    async def filter_by_mail(self, email: str) -> Optional[User]:
-        model = await self._user_repo.filter(email=email)
-        return model
+    async def create_user(self, *, name: str, email: str, password_hash: str) -> User:
+        return await self._user_repo.create(
+            name=name, email=email, password_hash=password_hash
+        )
+
+    async def get_user_by_email(self, email: str) -> User:
+        return await self._user_repo.get(email=email)
