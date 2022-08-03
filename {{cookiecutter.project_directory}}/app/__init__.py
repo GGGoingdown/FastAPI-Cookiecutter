@@ -10,7 +10,8 @@ __ROOT_PATH__ = "{{ cookiecutter.project_root_path }}"
 import sys
 import sentry_sdk
 from loguru import logger
-from fastapi import FastAPI, Request, HTTPException, status
+from fastapi import FastAPI, Request, status
+from fastapi.responses import JSONResponse
 
 
 # Settings
@@ -52,9 +53,9 @@ def add_exceptions(app: FastAPI) -> None:
         request: Request, exc: exceptions.BaseInternalServiceException
     ):
         _error_message = str(exc.error_message)
-        raise HTTPException(
+        return JSONResponse(
             status_code=status.HTTP_418_IM_A_TEAPOT,
-            detail=str(exc),
+            content={"detail": str(exc)},
             headers={"X-Error": _error_message},
         )
 
