@@ -6,3 +6,4 @@ from .auth import (  # noqa: F401
     JWTHandler,
 )
 from .user import UserService  # noqa: F401
+from .httpx import RequestClient, RequestHandler  # noqa: F401

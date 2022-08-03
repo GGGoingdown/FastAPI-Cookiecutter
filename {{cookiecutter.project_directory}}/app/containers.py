@@ -25,9 +25,16 @@ class Service(containers.DeclarativeContainer):
         log_path=config.app.log_path,
     )
 
+    request_client = providers.Resource(services.RequestClient)
+
     # * Model Repositories *#
     user_repo = providers.Singleton(
         repositories.UserRepo,
+    )
+
+    # * Request Handler* #
+    request_handler = providers.Singleton(
+        services.RequestHandler, request_client=request_client
     )
 
     # * Auth Services *#

@@ -35,12 +35,26 @@ async def db_connected():
         raise e
 
 
+@retry(stop=stop_after_attempt(max_tries), wait=wait_fixed(wait_seconds))
+def broker_connecttion():
+    try:
+        # Application
+        from app.main import celery
+
+        logger.info("--- Connect Broker ---")
+        celery.broker_connection().ensure_connection(max_retries=3)
+    except Exception as e:
+        logger.error(e)
+        raise e
+
+
 async def main():
     try:
         container = Application()
         logger.info("--- Connect DB ---")
         await container.gateway.db_resource.init()
         await db_connected()
+        broker_connecttion()
 
     finally:
         await container.gateway.db_resource.shutdown()

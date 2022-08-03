@@ -28,6 +28,51 @@ services:
         "--reload"
       ]
 
+  worker:
+    container_name: worker
+    build:
+      context: .
+    volumes:
+      - .:/app/
+      - ./log/application:${APPLICATION_LOG_PATH:-/var/log/application}
+    restart: unless-stopped
+    env_file:
+      - ./env/.dev.env
+    environment:
+      - MIGRATION=false
+      - CREATE_INIT_DATA=false
+      - APPLICATION_ENVIRONMENT=${APPLICATION_ENVIRONMENT?Variable not set}
+    command:
+      [
+        "./script/service_entrypoint.sh",
+        "python",
+        "./app/main.py"
+      ]
+  worker-monitor:
+    container_name: worker-monitor
+    build:
+      context: .
+    volumes:
+      - .:/app/
+      - ./log/application:${APPLICATION_LOG_PATH:-/var/log/application}
+    restart: unless-stopped
+    env_file:
+      - ./env/.dev.env
+    environment:
+      - MIGRATION=false
+      - CREATE_INIT_DATA=false
+      - APPLICATION_ENVIRONMENT=${APPLICATION_ENVIRONMENT?Variable not set}
+    ports:
+      - ${FLOWER_EXPOSE?Variable not set}:5555
+    command:
+      [
+        "celery",
+        "-A",
+        "app.main.celery",
+        "flower",
+        "--basic_auth=${FLOWER_USERNAME}:${FLOWER_PASSWORD}"
+      ]
+
   db:
     container_name: db
     image: postgres:13
@@ -52,3 +97,14 @@ services:
     restart: unless-stopped
     command: >
       --requirepass ${REDIS_PASSWORD?Variable not set}
+
+  broker:
+    image: rabbitmq:3.8-management
+    container_name: broker
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USERNAME?Variable not set}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD?Variable not set}
+    restart: unless-stopped
+    ports:
+      - ${RABBITMQ_EXPOSE?Variable not set}:5672
+      - ${RABBITMQ_MANAGEMENT_EXPOSE?Variable not set}:15672

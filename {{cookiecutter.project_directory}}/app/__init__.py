@@ -93,6 +93,9 @@ def create_app() -> FastAPI:
         docs_url=__DOCS_URL__,
         # root_path=__ROOT_PATH__,
     )
+    from app.broker import create_celery
+
+    app.celery_app = create_celery()
 
     # Routers
     from app import routers
@@ -103,11 +106,12 @@ def create_app() -> FastAPI:
 
     # Dependency injection
     from app import security
+    from app.broker import tasks
     from app.containers import Application
 
     container = Application()
     container.config.from_pydantic(settings)
-    container.wire(modules=[sys.modules[__name__], security, routers.auth])
+    container.wire(modules=[sys.modules[__name__], security, tasks, routers.auth])
 
     app.container = container
 
