@@ -30,6 +30,7 @@ environment:
 
   # Cache
   REDIS_HOST: "cache"
+  REDIS_PORT: 6379
   REDIS_USERNAME: default
   REDIS_PASSWORD: redis_username
   REDIS_BACKEND_DB: 0
@@ -42,8 +43,6 @@ environment:
   RABBITMQ_MANAGEMENT_EXPOSE: 15672
   RABBITMQ_USERNAME: rabbitmq_user
   RABBITMQ_PASSWORD: rabbitmq_user
-
-
 
 steps:
   - name: waiton cache

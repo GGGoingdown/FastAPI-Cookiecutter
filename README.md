@@ -10,7 +10,6 @@
     - PostgreSQL
     - Redis
     - RabbitMQ (Celery)
-
 ---
 ### Usage
 ```
