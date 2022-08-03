@@ -2,7 +2,6 @@ from fastapi import APIRouter, Depends
 from dependency_injector.wiring import inject, Provide
 from fastapi.security import OAuth2PasswordRequestForm
 
-# from tortoise.transactions import atomic
 
 ###
 from app import services, responses
