@@ -5,6 +5,11 @@
   - Include :
     - PostgreSQL
     - Redis
+- fastapi/broker
+  - Include :
+    - PostgreSQL
+    - Redis
+    - RabbitMQ (Celery)
 
 ---
 ### Usage
