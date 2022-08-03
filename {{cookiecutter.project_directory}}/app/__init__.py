@@ -61,13 +61,15 @@ def add_exceptions(app: FastAPI) -> None:
 
     @app.exception_handler(DoesNotExist)
     async def doesnotexist_exception_handler(request: Request, exc: DoesNotExist):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND, content={"detail": str(exc)}
+        )
 
     @app.exception_handler(IntegrityError)
     async def integrityerror_exception_handler(request: Request, exc: IntegrityError):
-        raise HTTPException(
+        return JSONResponse(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=str(exc),
+            content={"detail": str(exc)},
             headers={"X-Error": "IntegrityError"},
         )
 
