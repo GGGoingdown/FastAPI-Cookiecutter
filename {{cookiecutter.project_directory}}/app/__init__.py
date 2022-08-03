@@ -61,15 +61,14 @@ def add_exceptions(app: FastAPI) -> None:
 
     @app.exception_handler(DoesNotExist)
     async def doesnotexist_exception_handler(request: Request, exc: DoesNotExist):
-        return JSONResponse(status_code=404, content={"detail": str(exc)})
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
 
     @app.exception_handler(IntegrityError)
     async def integrityerror_exception_handler(request: Request, exc: IntegrityError):
-        return JSONResponse(
-            status_code=422,
-            content={
-                "detail": [{"loc": [], "msg": str(exc), "type": "IntegrityError"}]
-            },
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(exc),
+            headers={"X-Error": "IntegrityError"},
         )
 
     @app.exception_handler(exceptions.BaseInternalServiceException)
@@ -90,7 +89,7 @@ def create_app() -> FastAPI:
         description=__DESCRIPTION__,
         version=__VERSION__,
         docs_url=__DOCS_URL__,
-        # root_path=__ROOT_PATH__,
+        root_path=__ROOT_PATH__,
     )
 
     # Routers
