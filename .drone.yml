@@ -19,38 +19,42 @@ environment:
   APPLICATION_LOG_PATH: "/var/log/application"
 
 steps:
-  - name: Create cookiecutter project
+  - name: create cookiecutter project
     image: python:3.9-slim
     commands:
       - pip install --upgrade pip cookiecutter
-      - rm -rf /test-project
-      - cookiecutter --no-input -f /test-project project_name="Testing Project"
-
-  - name: Export requirements file
-    image: python:3.9-slim
-    commands:
-      - cd /test-project
-      - pip install --upgrade pip poetry
-      - poetry export -f requirements.txt --output /requirements/requirements.txt --without-hashes --dev
+      - rm -rf /project/*
+      - cookiecutter --no-input -f ./ -o /project project_name="testing project"
     volumes:
       - name: pythonpath
-        path: /requirements
+        path: /project
 
-  - name: Test
+
+  - name: export requirements file
+    image: python:3.9-slim
+    commands:
+      - cd /project/testing-project
+      - pip install --upgrade pip poetry
+      - poetry export -f requirements.txt --output /project/requirements.txt --without-hashes --dev
+    volumes:
+      - name: pythonpath
+        path: /project
+
+  - name: test
     image: python:3.9-slim
     environment:
       ENVIRONMENT: TEST
       JWT_SECRET_KEY:
         from_secret: JWT_SECRET_KEY
     commands:
-      - cd /test-project
-      - pip install --no-cache-dir --upgrade -r /requirements/requirements.txt
+      - cd /project/testing-project
+      - pip install --no-cache-dir --upgrade -r /project/requirements.txt
       - chmod +x ./script/service_entrypoint.sh
       - bash ./script/service_entrypoint.sh pytest
 
     volumes:
       - name: pythonpath
-        path: /requirements
+        path: /project
 
   - name: notification
     image: appleboy/drone-telegram

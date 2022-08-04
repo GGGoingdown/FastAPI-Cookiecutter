@@ -1,14 +1,17 @@
 kind: pipeline
 type: docker
-name: main
+name: unit_test
 
 workspace:
   path: /app
 
 environment:
+  # Python
+  PYTHONDONTWRITEBYTECODE: 1
+  PYTHONUNBUFFERED: 1
+  # JWT
   JWT_ALGORITHM: "HS256"
   JWT_EXPIRE_TIME_MINUTE: 120
-
   # Application
   APPLICATION_NAME: "application_testing"
   APPLICATION_ENVIRONMENT: "TEST"
@@ -16,22 +19,32 @@ environment:
   APPLICATION_LOG_PATH: "/var/log/application"
 
 steps:
-  - name: application testing
+  - name: export requirements file
+    image: python:3.9-slim
+    commands:
+      - pip install --upgrade pip poetry
+      - poetry export -f requirements.txt --output /project/requirements.txt --without-hashes --dev
+    volumes:
+      - name: pythonpath
+        path: /project
+
+  - name: test
     image: python:3.9-slim
     environment:
-      PYTHONDONTWRITEBYTECODE: 1
-      PYTHONUNBUFFERED: 1
       ENVIRONMENT: TEST
       JWT_SECRET_KEY:
         from_secret: JWT_SECRET_KEY
     commands:
-      - pip install --upgrade pip poetry
-      - poetry export -f requirements.txt --output requirements.txt --without-hashes --dev
-      - pip install --no-cache-dir --upgrade -r requirements.txt
+      - pip install --upgrade pip
+      - pip install --no-cache-dir --upgrade -r /project/requirements.txt
       - chmod +x ./script/service_entrypoint.sh
       - bash ./script/service_entrypoint.sh pytest -p no:warnings
+    volumes:
+      - name: pythonpath
+        path: /project
 
-  - name: telegram bot notification
+
+  - name: notification
     image: appleboy/drone-telegram
     when:
       status:
@@ -64,6 +77,11 @@ trigger:
     - test/*
     - feature/*
 
+volumes:
+  - name: pythonpath
+    temp: {}
+
+
 ---
 kind: pipeline
 type: docker
@@ -84,7 +102,7 @@ steps:
         - ${DRONE_TAG}
       storage_driver: vfs
 
-  - name: send telegram notification
+  - name: notification
     image: appleboy/drone-telegram
     when:
       status:
