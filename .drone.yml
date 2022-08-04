@@ -1,11 +1,14 @@
 kind: pipeline
 type: docker
-name: main
+name: unit_test
 
 workspace:
   path: /app
 
 environment:
+  # Python
+  PYTHONDONTWRITEBYTECODE: 1
+  PYTHONUNBUFFERED: 1
   # JWT
   JWT_ALGORITHM: "HS256"
   JWT_EXPIRE_TIME: 120
@@ -16,22 +19,40 @@ environment:
   APPLICATION_LOG_PATH: "/var/log/application"
 
 steps:
-  - name: application testing
+  - name: Create cookiecutter project
+    image: python:3.9-slim
+    commands:
+      - pip install --upgrade pip cookiecutter
+      - rm -rf /test-project
+      - cookiecutter --no-input -f /test-project project_name="Testing Project"
+
+  - name: Export requirements file
+    image: python:3.9-slim
+    commands:
+      - cd /test-project
+      - pip install --upgrade pip poetry
+      - poetry export -f requirements.txt --output /requirements/requirements.txt --without-hashes --dev
+    volumes:
+      - name: pythonpath
+        path: /requirements
+
+  - name: Test
     image: python:3.9-slim
     environment:
-      PYTHONDONTWRITEBYTECODE: 1
-      PYTHONUNBUFFERED: 1
       ENVIRONMENT: TEST
       JWT_SECRET_KEY:
         from_secret: JWT_SECRET_KEY
-
     commands:
-      - pip install --upgrade pip poetry cookiecutter
-      - chmod +x test.sh
-      - bash test.sh
+      - cd /test-project
+      - pip install --no-cache-dir --upgrade -r /requirements/requirements.txt
+      - chmod +x ./script/service_entrypoint.sh
+      - bash ./script/service_entrypoint.sh pytest
 
+    volumes:
+      - name: pythonpath
+        path: /requirements
 
-  - name: telegram bot notification
+  - name: notification
     image: appleboy/drone-telegram
     when:
       status:
@@ -64,3 +85,8 @@ trigger:
     - test/*
     - feature/*
     - fastapi/*
+
+
+volumes:
+  - name: pythonpath
+    temp: {}
