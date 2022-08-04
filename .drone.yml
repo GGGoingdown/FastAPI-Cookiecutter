@@ -84,7 +84,6 @@ steps:
       - aerich upgrade
       - python ./tests/create_test_init_data.py
       - pytest
-
     volumes:
       - name: pythonpath
         path: /project
