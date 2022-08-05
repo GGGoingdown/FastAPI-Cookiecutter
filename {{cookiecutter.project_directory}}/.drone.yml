@@ -10,6 +10,7 @@ environment:
   PYTHONDONTWRITEBYTECODE: 1
   PYTHONUNBUFFERED: 1
   # JWT
+  JWT_SECRET_KEY: "356da8ae4b88394ef1337f90031c80e3c014c30758099a2c262d5b2ba3e97ffd"
   JWT_ALGORITHM: "HS256"
   JWT_EXPIRE_TIME_MINUTE: 120
   # Application
@@ -32,8 +33,6 @@ steps:
     image: python:3.9-slim
     environment:
       ENVIRONMENT: TEST
-      JWT_SECRET_KEY:
-        from_secret: JWT_SECRET_KEY
     commands:
       - pip install --upgrade pip
       - pip install --no-cache-dir --upgrade -r /project/requirements.txt

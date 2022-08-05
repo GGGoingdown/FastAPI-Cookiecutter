@@ -1,3 +1,4 @@
+---
 kind: pipeline
 type: docker
 name: unit_test
@@ -10,6 +11,7 @@ environment:
   PYTHONDONTWRITEBYTECODE: 1
   PYTHONUNBUFFERED: 1
   # JWT
+  JWT_SECRET_KEY: "3f9b6bac9a7bf08feb5f37bf255ad8102d11a20b0deb2d5e14ced7f5c34afbfb"
   JWT_ALGORITHM: "HS256"
   JWT_EXPIRE_TIME: 120
   # Application
@@ -44,8 +46,6 @@ steps:
     image: python:3.9-slim
     environment:
       ENVIRONMENT: TEST
-      JWT_SECRET_KEY:
-        from_secret: JWT_SECRET_KEY
     commands:
       - cd /project/testing-project
       - pip install --no-cache-dir --upgrade -r /project/requirements.txt
@@ -94,3 +94,8 @@ trigger:
 volumes:
   - name: pythonpath
     temp: {}
+---
+kind: signature
+hmac: dee9940084aa37183e69a145ed8077e4f1d5a0be4a2ad4915b5cf30766d9edf4
+
+...
