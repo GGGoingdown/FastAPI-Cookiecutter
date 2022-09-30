@@ -32,6 +32,24 @@ class SentryConfiguration(BaseSettings):
     )
 
 
+# Redis
+class RedisConfiguration(BaseSettings):
+    host: str = Field(env="REDIS_HOST")
+    port: str = Field(env="REDIS_PORT")
+    username: str = Field(env="REDIS_USERNAME")
+    password: str = Field(env="REDIS_PASSWORD")
+    backend_db: int = Field(0, env="REDIS_BACKEND_DB")
+
+
+# Postgres
+class PostgresConfiguration(BaseSettings):
+    host: str = Field(env="POSTGRES_HOST")
+    port: str = Field(env="POSTGRES_PORT")
+    username: str = Field(env="POSTGRES_USERNAME")
+    password: str = Field(env="POSTGRES_PASSWORD")
+    db: str = Field(env="POSTGRES_DB")
+
+
 class Settings(BaseSettings):
     # Application
     app: Application = Application()
@@ -41,6 +59,12 @@ class Settings(BaseSettings):
 
     # Sentry Monitor
     sentry: SentryConfiguration = SentryConfiguration()
+
+    # RDBMS
+    pg: PostgresConfiguration = PostgresConfiguration()
+
+    # Redis
+    redis: RedisConfiguration = RedisConfiguration()
 
 
 @lru_cache(maxsize=50)

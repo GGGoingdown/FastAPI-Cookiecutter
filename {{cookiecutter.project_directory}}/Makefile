@@ -2,7 +2,7 @@
 up:
 	echo "Service up"
 	docker-compose --env-file ./env/.dev.env  up -d
-	docker-compose --env-file ./env/.dev.env logs app
+	docker-compose --env-file ./env/.dev.env logs -f app
 down:
 	echo "Service down"
 	docker-compose --env-file ./env/.dev.env  down

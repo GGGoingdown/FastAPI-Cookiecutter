@@ -6,6 +6,20 @@ workspace:
   path: /app
 
 steps:
+  - name: waiton cache
+    image: akhenakh/drone-waiton:1.0
+    settings:
+      globaltimeout: 60s
+      urls:
+        - tcp://cache:6379
+
+  - name: waiton db
+    image: akhenakh/drone-waiton:1.0
+    settings:
+      globaltimeout: 60s
+      urls:
+        - tcp://db:5432
+
   - name: export requirements file
     image: python:3.9-slim
     commands:
@@ -30,7 +44,6 @@ steps:
     volumes:
       - name: pythonpath
         path: /project
-
 
   - name: notification
     image: appleboy/drone-telegram
@@ -58,6 +71,19 @@ steps:
           Message: Test failed. Fix me please.
           Version: {{build.number}}
         {{/success}}
+
+services:
+  - name: cache
+    image: redis:6.2
+    commands:
+      - redis-server --requirepass redis_username
+
+  - name: db
+    image: postgres:13
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: test
 
 trigger:
   branch:
