@@ -10,7 +10,7 @@ steps:
     image: python:3.9-slim
     commands:
       - pip install --upgrade pip poetry
-      - poetry export -f requirements.txt --output /project/requirements.txt --without-hashes --dev
+      - poetry export -f requirements.txt --output /project/requirements.txt --without-hashes --with dev
     volumes:
       - name: pythonpath
         path: /project
