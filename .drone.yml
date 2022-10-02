@@ -6,6 +6,7 @@ name: unit_test
 workspace:
   path: /app
 
+
 steps:
   - name: waiton cache
     image: akhenakh/drone-waiton:1.0
@@ -44,7 +45,7 @@ steps:
     commands:
       - cd /project/testing-project
       - pip install --upgrade pip poetry
-      - poetry export -f requirements.txt --output /project/requirements.txt --without-hashes --dev
+      - poetry export -f requirements.txt --output /project/requirements.txt --without-hashes --with dev
     volumes:
       - name: pythonpath
         path: /project
@@ -52,12 +53,15 @@ steps:
   - name: test
     image: python:3.9-slim
     environment:
+      PYTHONDONTWRITEBYTECODE: 1
+      PYTHONUNBUFFERED: 1
       ENVIRONMENT: TEST
       MIGRATION: true
       CREATE_INIT_DATA: false
     commands:
       - cd /project/testing-project
       - pip install --no-cache-dir --upgrade -r /project/requirements.txt
+      - export $(grep -v '^#' ./env/.drone.env | xargs)
       - aerich upgrade
       - python ./tests/create_test_init_data.py
       - pytest
