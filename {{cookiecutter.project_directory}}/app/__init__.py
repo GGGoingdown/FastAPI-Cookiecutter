@@ -10,8 +10,9 @@ __ROOT_PATH__ = "{{ cookiecutter.project_root_path }}"
 import sys
 import sentry_sdk
 from loguru import logger
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
+
 
 # Settings
 from app import exceptions
@@ -60,15 +61,16 @@ def add_exceptions(app: FastAPI) -> None:
 
     @app.exception_handler(DoesNotExist)
     async def doesnotexist_exception_handler(request: Request, exc: DoesNotExist):
-        return JSONResponse(status_code=404, content={"detail": str(exc)})
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND, content={"detail": str(exc)}
+        )
 
     @app.exception_handler(IntegrityError)
     async def integrityerror_exception_handler(request: Request, exc: IntegrityError):
         return JSONResponse(
-            status_code=422,
-            content={
-                "detail": [{"loc": [], "msg": str(exc), "type": "IntegrityError"}]
-            },
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            content={"detail": str(exc)},
+            headers={"X-Error": "IntegrityError"},
         )
 
     @app.exception_handler(exceptions.BaseInternalServiceException)
@@ -77,7 +79,7 @@ def add_exceptions(app: FastAPI) -> None:
     ):
         _error_message = str(exc.error_message)
         return JSONResponse(
-            status_code=500,
+            status_code=status.HTTP_418_IM_A_TEAPOT,
             content={"detail": str(exc)},
             headers={"X-Error": _error_message},
         )
@@ -91,6 +93,9 @@ def create_app() -> FastAPI:
         docs_url=__DOCS_URL__,
         # root_path=__ROOT_PATH__,
     )
+    from app.broker import create_celery
+
+    app.celery_app = create_celery()
 
     # Routers
     from app import routers
@@ -101,11 +106,12 @@ def create_app() -> FastAPI:
 
     # Dependency injection
     from app import security
+    from app.broker import tasks
     from app.containers import Application
 
     container = Application()
     container.config.from_pydantic(settings)
-    container.wire(modules=[sys.modules[__name__], security, routers.auth])
+    container.wire(modules=[sys.modules[__name__], security, tasks, routers.auth])
 
     app.container = container
 

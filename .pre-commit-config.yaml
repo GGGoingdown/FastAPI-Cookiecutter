@@ -35,6 +35,8 @@ repos:
     hooks:
     -   id: mypy
         args: [--no-strict-optional, --ignore-missing-imports]
+        additional_dependencies:
+          [types-pytz, types-requests, types-redis, types-requests]
 
 
 default_language_version:

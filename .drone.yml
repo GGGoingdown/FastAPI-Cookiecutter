@@ -1,35 +1,10 @@
+---
 kind: pipeline
 type: docker
-name: main
+name: unit_test
 
 workspace:
   path: /app
-
-environment:
-  # JWT
-  JWT_ALGORITHM: "HS256"
-  JWT_EXPIRE_TIME: 120
-
-  # Application
-  APPLICATION_NAME: "application_testing"
-  APPLICATION_ENVIRONMENT: "TEST"
-  APPLICATION_LOG_LEVEL: "DEBUG"
-  APPLICATION_LOG_PATH: "/var/log/application"
-
-  # DB
-  POSTGRES_HOST: "db"
-  POSTGRES_USERNAME: postgres
-  POSTGRES_PASSWORD: postgres
-  POSTGRES_PORT: 5432
-  POSTGRES_DB: test
-
-  # Cache
-  REDIS_HOST: "cache"
-  REDIS_PORT: 6379
-  REDIS_USERNAME: default
-  REDIS_PASSWORD: redis_username
-  REDIS_BACKEND_DB: 0
-
 
 steps:
   - name: waiton cache
@@ -46,25 +21,51 @@ steps:
       urls:
         - tcp://db:5432
 
+  - name: waiton broker
+    image: akhenakh/drone-waiton:1.0
+    settings:
+      globaltimeout: 120s
+      urls:
+        - tcp://broker:5672
 
-  - name: application testing
+
+  - name: create cookiecutter project
+    image: python:3.9-slim
+    commands:
+      - pip install --upgrade pip cookiecutter
+      - rm -rf /project/*
+      - cookiecutter --no-input -f ./ -o /project project_name="testing project"
+    volumes:
+      - name: pythonpath
+        path: /project
+
+  - name: export requirements file
+    image: python:3.9-slim
+    commands:
+      - cd /project/testing-project
+      - pip install --upgrade pip poetry
+      - poetry export -f requirements.txt --output /project/requirements.txt --without-hashes --dev
+    volumes:
+      - name: pythonpath
+        path: /project
+
+  - name: test
     image: python:3.9-slim
     environment:
-      PYTHONDONTWRITEBYTECODE: 1
-      PYTHONUNBUFFERED: 1
       ENVIRONMENT: TEST
       MIGRATION: true
       CREATE_INIT_DATA: false
-      JWT_SECRET_KEY:
-        from_secret: JWT_SECRET_KEY
-
     commands:
-      - pip install --upgrade pip poetry cookiecutter
-      - chmod +x test.sh
-      - bash test.sh
+      - cd /project/testing-project
+      - pip install --no-cache-dir --upgrade -r /project/requirements.txt
+      - aerich upgrade
+      - python ./tests/create_test_init_data.py
+      - pytest
+    volumes:
+      - name: pythonpath
+        path: /project
 
-
-  - name: telegram bot notification
+  - name: notification
     image: appleboy/drone-telegram
     when:
       status:
@@ -78,14 +79,17 @@ steps:
       message: >
         {{#success build.status}}
           Repository: {{repo.name}}
-          Version: {{build.number}}
+          Branch: {{commit.branch}}
           Commit message:  {{commit.message}}
           Message: Test succeeded. Good job.
+          Version: {{build.number}}
         {{else}}
           Repository: {{repo.name}}
+          Branch: {{commit.branch}}
           Version: {{build.number}}
           Commit message:  {{commit.message}}
           Message: Test failed. Fix me please.
+          Version: {{build.number}}
         {{/success}}
 
 services:
@@ -101,6 +105,12 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: test
 
+  - name: broker
+    image: rabbitmq:3.8-management
+    environment:
+      RABBITMQ_DEFAULT_USER: rabbitmq_user
+      RABBITMQ_DEFAULT_PASS: rabbitmq_user
+
 
 trigger:
   branch:
@@ -108,3 +118,13 @@ trigger:
     - test/*
     - feature/*
     - fastapi/*
+
+
+volumes:
+  - name: pythonpath
+    temp: {}
+---
+kind: signature
+hmac: dee9940084aa37183e69a145ed8077e4f1d5a0be4a2ad4915b5cf30766d9edf4
+
+...
